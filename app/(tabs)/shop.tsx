@@ -22,7 +22,7 @@ export default function ShopScreen() {
     : products.filter(p => p.category === selectedCategory);
 
   const handleProductPress = (product: Product) => {
-    console.log('Product pressed:', product.title);
+    router.push(`/product/${product.id}`);
   };
 
   const handleCartPress = () => {

@@ -35,8 +35,7 @@ export default function HomeScreen() {
   };
 
   const handleProductPress = (product: Product) => {
-    // Navigate to product details
-    console.log('Product pressed:', product.title);
+    router.push(`/product/${product.id}`);
   };
 
   // Split products into pairs for the grid
