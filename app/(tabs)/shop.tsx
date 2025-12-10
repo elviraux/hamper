@@ -11,11 +11,13 @@ import { ProductCard } from '@/components/ProductCard';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { products, Product } from '@/data/products';
 import { router } from 'expo-router';
+import { useCart } from '@/context/CartContext';
 
 const categories = ['All', 'Subscriptions', 'BBQ', 'Holiday', 'Treats', 'Seasonings'];
 
 export default function ShopScreen() {
   const [selectedCategory, setSelectedCategory] = React.useState('All');
+  const { totalItems } = useCart();
 
   const filteredProducts = selectedCategory === 'All'
     ? products
@@ -49,7 +51,7 @@ export default function ShopScreen() {
   return (
     <View style={styles.container}>
       <Header
-        cartItemCount={2}
+        cartItemCount={totalItems}
         onCartPress={handleCartPress}
       />
       <ScrollView

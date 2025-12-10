@@ -16,18 +16,14 @@ import { StarRating } from '@/components/StarRating';
 import { SatisfactionBadge } from '@/components/SatisfactionBadge';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { getProductById } from '@/data/products';
-
-const planOptions = [
-  { id: '3', label: '3 Months', value: '3-months' },
-  { id: '6', label: '6 Months', value: '6-months' },
-  { id: '12', label: '12 Months', value: '12-months' },
-];
+import { useCart, planOptions } from '@/context/CartContext';
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [showPlanPicker, setShowPlanPicker] = useState(false);
+  const { addToCart } = useCart();
 
   const product = getProductById(id || '');
 
@@ -59,10 +55,19 @@ export default function ProductDetailScreen() {
   };
 
   const handleAddToCart = () => {
+    addToCart(product, selectedPlan || undefined);
+
+    const planLabel = selectedPlan
+      ? planOptions.find(p => p.value === selectedPlan)?.label
+      : null;
+
     Alert.alert(
       'Added to Cart',
-      `${product.title}${selectedPlan ? ` (${planOptions.find(p => p.value === selectedPlan)?.label})` : ''} has been added to your cart!`,
-      [{ text: 'OK' }]
+      `${product.title}${planLabel ? ` (${planLabel})` : ''} has been added to your cart!`,
+      [
+        { text: 'Continue Shopping', style: 'cancel' },
+        { text: 'View Cart', onPress: () => router.push('/(tabs)/cart') }
+      ]
     );
   };
 

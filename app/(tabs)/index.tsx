@@ -11,9 +11,10 @@ import { HeroCarousel } from '@/components/HeroCarousel';
 import { ProductCard } from '@/components/ProductCard';
 import { Colors, Typography, Spacing } from '@/constants/theme';
 import { getFeaturedProducts, Product, HeroBanner } from '@/data/products';
+import { useCart } from '@/context/CartContext';
 
 export default function HomeScreen() {
-  const cartItemCount = 2;
+  const { totalItems } = useCart();
   const featuredProducts = getFeaturedProducts();
 
   const handleMenuPress = () => {
@@ -59,7 +60,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <Header
-        cartItemCount={cartItemCount}
+        cartItemCount={totalItems}
         onMenuPress={handleMenuPress}
         onSearchPress={handleSearchPress}
         onCartPress={handleCartPress}
