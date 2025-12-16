@@ -21,6 +21,21 @@ export default function RootLayout() {
             presentation: 'card',
           }}
         />
+        <Stack.Screen
+          name="checkout"
+          options={{
+            headerShown: false,
+            presentation: 'card',
+          }}
+        />
+        <Stack.Screen
+          name="order-success"
+          options={{
+            headerShown: false,
+            presentation: 'card',
+            gestureEnabled: false, // Prevent swipe back from success screen
+          }}
+        />
       </Stack>
     </CartProvider>
   );

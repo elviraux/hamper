@@ -2,8 +2,9 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Product } from '@/data/products';
 
-// Storage key for AsyncStorage
+// Storage keys for AsyncStorage
 const CART_STORAGE_KEY = '@pig_of_the_month_cart';
+const ORDER_HISTORY_STORAGE_KEY = '@pig_of_the_month_order_history';
 
 // Cart item interface
 export interface CartItem {
@@ -11,6 +12,24 @@ export interface CartItem {
   product: Product;
   quantity: number;
   selectedPlan?: string; // e.g., "3-months", "6-months", "12-months"
+}
+
+// Order interface
+export interface Order {
+  id: string;
+  date: string;
+  items: CartItem[];
+  subtotal: number;
+  shipping: number;
+  total: number;
+  status: 'Processing' | 'Shipped' | 'Delivered';
+  shippingAddress: {
+    name: string;
+    street: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  };
 }
 
 // Plan option interface
@@ -33,13 +52,22 @@ export const getPlanLabel = (value: string | undefined): string | undefined => {
   return planOptions.find((p) => p.value === value)?.label;
 };
 
+// Generate unique order ID
+const generateOrderId = (): string => {
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `POM-${timestamp}-${randomPart}`;
+};
+
 // Context type definition
 interface CartContextType {
   items: CartItem[];
+  orderHistory: Order[];
   addToCart: (product: Product, plan?: string) => void;
   removeFromCart: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
+  placeOrder: (shippingAddress: Order['shippingAddress']) => Order;
   totalItems: number;
   cartTotal: number;
   isLoading: boolean;
@@ -53,28 +81,42 @@ const generateCartItemId = (productId: string, plan?: string): string => {
   return plan ? `${productId}_${plan}` : productId;
 };
 
+// Shipping constants
+const FREE_SHIPPING_THRESHOLD = 50;
+const SHIPPING_COST = 10;
+
 // CartProvider component
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [orderHistory, setOrderHistory] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load cart from AsyncStorage on mount
+  // Load cart and order history from AsyncStorage on mount
   useEffect(() => {
-    const loadCart = async () => {
+    const loadData = async () => {
       try {
-        const storedCart = await AsyncStorage.getItem(CART_STORAGE_KEY);
+        const [storedCart, storedOrderHistory] = await Promise.all([
+          AsyncStorage.getItem(CART_STORAGE_KEY),
+          AsyncStorage.getItem(ORDER_HISTORY_STORAGE_KEY),
+        ]);
+
         if (storedCart) {
           const parsedCart = JSON.parse(storedCart);
           setItems(parsedCart);
         }
+
+        if (storedOrderHistory) {
+          const parsedOrderHistory = JSON.parse(storedOrderHistory);
+          setOrderHistory(parsedOrderHistory);
+        }
       } catch (error) {
-        console.error('Error loading cart from storage:', error);
+        console.error('Error loading data from storage:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadCart();
+    loadData();
   }, []);
 
   // Save cart to AsyncStorage whenever items change
@@ -92,6 +134,22 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       saveCart();
     }
   }, [items, isLoading]);
+
+  // Save order history to AsyncStorage whenever it changes
+  useEffect(() => {
+    const saveOrderHistory = async () => {
+      try {
+        await AsyncStorage.setItem(ORDER_HISTORY_STORAGE_KEY, JSON.stringify(orderHistory));
+      } catch (error) {
+        console.error('Error saving order history to storage:', error);
+      }
+    };
+
+    // Only save after initial load is complete
+    if (!isLoading) {
+      saveOrderHistory();
+    }
+  }, [orderHistory, isLoading]);
 
   // Add item to cart
   const addToCart = useCallback((product: Product, plan?: string) => {
@@ -156,12 +214,37 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   }, [items]);
 
+  // Place order function
+  const placeOrder = useCallback((shippingAddress: Order['shippingAddress']): Order => {
+    const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+    const shipping = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
+    const total = subtotal + shipping;
+
+    const newOrder: Order = {
+      id: generateOrderId(),
+      date: new Date().toISOString(),
+      items: [...items],
+      subtotal,
+      shipping,
+      total,
+      status: 'Processing',
+      shippingAddress,
+    };
+
+    setOrderHistory((prevHistory) => [newOrder, ...prevHistory]);
+    setItems([]); // Clear cart after placing order
+
+    return newOrder;
+  }, [items]);
+
   const value: CartContextType = {
     items,
+    orderHistory,
     addToCart,
     removeFromCart,
     updateQuantity,
     clearCart,
+    placeOrder,
     totalItems,
     cartTotal,
     isLoading,

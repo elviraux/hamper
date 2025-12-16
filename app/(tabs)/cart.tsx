@@ -50,6 +50,10 @@ export default function CartScreen() {
     router.push('/(tabs)/shop');
   };
 
+  const handleCheckout = () => {
+    router.push('/checkout');
+  };
+
   const renderCartItem = (item: CartItem) => {
     const planLabel = getPlanLabel(item.selectedPlan);
 
@@ -164,7 +168,11 @@ export default function CartScreen() {
               <Text style={styles.totalLabel}>Total:</Text>
               <Text style={styles.totalValue}>{formatPrice(total)}</Text>
             </View>
-            <TouchableOpacity style={styles.checkoutButton} activeOpacity={0.8}>
+            <TouchableOpacity
+              style={styles.checkoutButton}
+              activeOpacity={0.8}
+              onPress={handleCheckout}
+            >
               <Text style={styles.checkoutButtonText}>CHECKOUT</Text>
             </TouchableOpacity>
           </View>

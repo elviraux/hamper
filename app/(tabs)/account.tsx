@@ -9,6 +9,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
+import { useCart, Order } from '@/context/CartContext';
 
 interface MenuItemProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -39,8 +40,74 @@ const MenuItem: React.FC<MenuItemProps> = ({
   </TouchableOpacity>
 );
 
+// Order status badge component
+const StatusBadge: React.FC<{ status: Order['status'] }> = ({ status }) => {
+  const getStatusColor = () => {
+    switch (status) {
+      case 'Delivered':
+        return '#4CAF50';
+      case 'Shipped':
+        return '#2196F3';
+      case 'Processing':
+      default:
+        return '#FF9800';
+    }
+  };
+
+  return (
+    <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor()}20` }]}>
+      <Text style={[styles.statusText, { color: getStatusColor() }]}>{status}</Text>
+    </View>
+  );
+};
+
+// Format date for display
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
+// Format price
+const formatPrice = (price: number): string => `$${price.toFixed(2)}`;
+
+// Order card component
+const OrderCard: React.FC<{ order: Order }> = ({ order }) => (
+  <View style={styles.orderCard}>
+    <View style={styles.orderHeader}>
+      <View style={styles.orderInfo}>
+        <Text style={styles.orderId}>{order.id}</Text>
+        <Text style={styles.orderDate}>{formatDate(order.date)}</Text>
+      </View>
+      <StatusBadge status={order.status} />
+    </View>
+    <View style={styles.orderDivider} />
+    <View style={styles.orderFooter}>
+      <Text style={styles.orderItemCount}>
+        {order.items.reduce((sum, item) => sum + item.quantity, 0)} items
+      </Text>
+      <Text style={styles.orderTotal}>{formatPrice(order.total)}</Text>
+    </View>
+  </View>
+);
+
+// Empty orders component
+const EmptyOrders: React.FC = () => (
+  <View style={styles.emptyOrders}>
+    <Ionicons name="receipt-outline" size={48} color={Colors.borderColor} />
+    <Text style={styles.emptyOrdersTitle}>No past orders</Text>
+    <Text style={styles.emptyOrdersSubtitle}>
+      Your order history will appear here
+    </Text>
+  </View>
+);
+
 export default function AccountScreen() {
   const insets = useSafeAreaInsets();
+  const { orderHistory } = useCart();
 
   return (
     <View style={styles.container}>
@@ -70,24 +137,23 @@ export default function AccountScreen() {
           <Text style={styles.signInButtonText}>SIGN IN / CREATE ACCOUNT</Text>
         </TouchableOpacity>
 
-        {/* Menu Sections */}
+        {/* Order History Section */}
         <View style={styles.menuSection}>
-          <Text style={styles.sectionTitle}>Orders</Text>
-          <View style={styles.menuCard}>
-            <MenuItem
-              icon="receipt-outline"
-              title="Order History"
-              subtitle="View your past orders"
-            />
-            <View style={styles.menuDivider} />
-            <MenuItem
-              icon="refresh-outline"
-              title="Track Order"
-              subtitle="Check your order status"
-            />
-          </View>
+          <Text style={styles.sectionTitle}>Order History</Text>
+          {orderHistory.length > 0 ? (
+            <View style={styles.ordersContainer}>
+              {orderHistory.map((order) => (
+                <OrderCard key={order.id} order={order} />
+              ))}
+            </View>
+          ) : (
+            <View style={styles.menuCard}>
+              <EmptyOrders />
+            </View>
+          )}
         </View>
 
+        {/* Menu Sections */}
         <View style={styles.menuSection}>
           <Text style={styles.sectionTitle}>Subscriptions</Text>
           <View style={styles.menuCard}>
@@ -268,6 +334,80 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: Colors.borderColor,
     marginLeft: Spacing.base + 36 + Spacing.md,
+  },
+  // Order history styles
+  ordersContainer: {
+    gap: Spacing.md,
+  },
+  orderCard: {
+    backgroundColor: Colors.cardBackground,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.base,
+    ...Shadows.card,
+  },
+  orderHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  orderInfo: {
+    flex: 1,
+  },
+  orderId: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.bold,
+    color: Colors.textHeading,
+  },
+  orderDate: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textLight,
+    marginTop: Spacing.xs,
+  },
+  statusBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
+  },
+  statusText: {
+    fontSize: Typography.sizes.xs,
+    fontWeight: Typography.weights.semibold,
+  },
+  orderDivider: {
+    height: 1,
+    backgroundColor: Colors.borderColor,
+    marginVertical: Spacing.md,
+  },
+  orderFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  orderItemCount: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textBody,
+  },
+  orderTotal: {
+    fontSize: Typography.sizes.lg,
+    fontWeight: Typography.weights.bold,
+    color: Colors.textHeading,
+  },
+  // Empty orders styles
+  emptyOrders: {
+    alignItems: 'center',
+    paddingVertical: Spacing.xl,
+    paddingHorizontal: Spacing.base,
+  },
+  emptyOrdersTitle: {
+    fontSize: Typography.sizes.md,
+    fontWeight: Typography.weights.semibold,
+    color: Colors.textHeading,
+    marginTop: Spacing.md,
+  },
+  emptyOrdersSubtitle: {
+    fontSize: Typography.sizes.sm,
+    color: Colors.textLight,
+    marginTop: Spacing.xs,
+    textAlign: 'center',
   },
   version: {
     fontSize: Typography.sizes.sm,
