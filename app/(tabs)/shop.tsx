@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { Header } from '@/components/Header';
 import { ProductCard } from '@/components/ProductCard';
@@ -17,7 +18,7 @@ const categories = ['All', 'Subscriptions', 'BBQ', 'Holiday', 'Treats', 'Seasoni
 
 export default function ShopScreen() {
   const [selectedCategory, setSelectedCategory] = React.useState('All');
-  const { totalItems } = useCart();
+  const { totalItems, addToCart } = useCart();
 
   const filteredProducts = selectedCategory === 'All'
     ? products
@@ -31,6 +32,16 @@ export default function ShopScreen() {
     router.push('/(tabs)/cart');
   };
 
+  const handleQuickAdd = (product: Product) => {
+    addToCart(product);
+    Alert.alert(
+      'Added to Cart',
+      `${product.title} has been added to your cart.`,
+      [{ text: 'OK' }],
+      { cancelable: true }
+    );
+  };
+
   const renderProductGrid = () => {
     const rows = [];
     for (let i = 0; i < filteredProducts.length; i += 2) {
@@ -38,9 +49,17 @@ export default function ShopScreen() {
       const rightProduct = filteredProducts[i + 1];
       rows.push(
         <View key={i} style={styles.productRow}>
-          <ProductCard product={leftProduct} onPress={handleProductPress} />
+          <ProductCard
+            product={leftProduct}
+            onPress={handleProductPress}
+            onAddToCart={handleQuickAdd}
+          />
           {rightProduct && (
-            <ProductCard product={rightProduct} onPress={handleProductPress} />
+            <ProductCard
+              product={rightProduct}
+              onPress={handleProductPress}
+              onAddToCart={handleQuickAdd}
+            />
           )}
         </View>
       );

@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Header } from '@/components/Header';
@@ -14,7 +15,7 @@ import { getFeaturedProducts, Product, HeroBanner } from '@/data/products';
 import { useCart } from '@/context/CartContext';
 
 export default function HomeScreen() {
-  const { totalItems } = useCart();
+  const { totalItems, addToCart } = useCart();
   const featuredProducts = getFeaturedProducts();
 
   const handleMenuPress = () => {
@@ -39,6 +40,16 @@ export default function HomeScreen() {
     router.push(`/product/${product.id}`);
   };
 
+  const handleQuickAdd = (product: Product) => {
+    addToCart(product);
+    Alert.alert(
+      'Added to Cart',
+      `${product.title} has been added to your cart.`,
+      [{ text: 'OK' }],
+      { cancelable: true }
+    );
+  };
+
   // Split products into pairs for the grid
   const renderProductGrid = () => {
     const rows = [];
@@ -47,9 +58,17 @@ export default function HomeScreen() {
       const rightProduct = featuredProducts[i + 1];
       rows.push(
         <View key={i} style={styles.productRow}>
-          <ProductCard product={leftProduct} onPress={handleProductPress} />
+          <ProductCard
+            product={leftProduct}
+            onPress={handleProductPress}
+            onAddToCart={handleQuickAdd}
+          />
           {rightProduct && (
-            <ProductCard product={rightProduct} onPress={handleProductPress} />
+            <ProductCard
+              product={rightProduct}
+              onPress={handleProductPress}
+              onAddToCart={handleQuickAdd}
+            />
           )}
         </View>
       );
