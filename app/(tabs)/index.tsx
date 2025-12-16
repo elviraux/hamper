@@ -18,11 +18,6 @@ export default function HomeScreen() {
   const { totalItems, addToCart } = useCart();
   const featuredProducts = getFeaturedProducts();
 
-  const handleMenuPress = () => {
-    // Menu functionality - could open drawer
-    console.log('Menu pressed');
-  };
-
   const handleSearchPress = () => {
     // Search functionality
     console.log('Search pressed');
@@ -80,7 +75,6 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <Header
         cartItemCount={totalItems}
-        onMenuPress={handleMenuPress}
         onSearchPress={handleSearchPress}
         onCartPress={handleCartPress}
       />

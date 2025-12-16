@@ -12,14 +12,12 @@ import { Colors, Typography, Spacing, Shadows } from '@/constants/theme';
 
 interface HeaderProps {
   cartItemCount?: number;
-  onMenuPress?: () => void;
   onSearchPress?: () => void;
   onCartPress?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   cartItemCount = 0,
-  onMenuPress,
   onSearchPress,
   onCartPress,
 }) => {
@@ -28,14 +26,8 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.content}>
-        {/* Left: Hamburger Menu */}
-        <TouchableOpacity
-          style={styles.iconButton}
-          onPress={onMenuPress}
-          accessibilityLabel="Menu"
-        >
-          <Ionicons name="menu" size={26} color={Colors.textHeading} />
-        </TouchableOpacity>
+        {/* Left: Empty placeholder for balance */}
+        <View style={styles.leftPlaceholder} />
 
         {/* Center: Logo */}
         <View style={styles.logoContainer}>
@@ -89,6 +81,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.base,
     paddingVertical: Spacing.md,
     minHeight: 56,
+  },
+  leftPlaceholder: {
+    // Match the width of rightIcons (2 icons with gap)
+    width: 72,
   },
   iconButton: {
     padding: Spacing.xs,
